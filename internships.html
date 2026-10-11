@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Internships - InternSpark{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 5rem;">
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <div class="hero-pill" style="margin-bottom:0.5rem;">
+      <i class="fa-solid fa-compass"></i> Internship Explorer
+    </div>
+    <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+      Find Your Perfect Tech Internship
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Browse verified opportunities or filter by skills, stipend, work style, and transparent match scores.
+    </p>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card" style="margin-bottom: 2.5rem; background: #ffffff; box-shadow: var(--shadow-sm);">
+    <form action="{{ url_for('internships') }}" method="GET" id="search-filter-form">
+      <!-- Search Input -->
+      <div style="display:flex; gap:0.75rem; margin-bottom:1.25rem;">
+        <div style="flex:1; position:relative;">
+          <input 
+            type="text" 
+            name="q" 
+            class="form-control" 
+            placeholder="Search keywords: Python, Full-Stack, Machine Learning, Austin, AWS..." 
+            value="{{ q }}"
+            id="filter-search-input"
+          >
+        </div>
+        <button type="submit" class="btn btn-primary" id="apply-filters-btn">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
+        </button>
+      </div>
+
+      <!-- Filters Row -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; align-items:end;">
+        <div>
+          <label class="form-label" style="font-size:0.825rem;">Category</label>
+          <select name="category" class="form-select" style="padding:0.55rem 0.75rem; font-size:0.875rem;">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+              <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:0.825rem;">Work Mode</label>
+          <select name="work_mode" class="form-select" style="padding:0.55rem 0.75rem; font-size:0.875rem;">
+            <option value="">All Work Modes</option>
+            <option value="Remote" {% if work_mode == 'Remote' %}selected{% endif %}>Remote</option>
+            <option value="Hybrid" {% if work_mode == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+            <option value="On-site" {% if work_mode == 'On-site' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:0.825rem;">Compensation</label>
+          <select name="stipend_type" class="form-select" style="padding:0.55rem 0.75rem; font-size:0.875rem;">
+            <option value="">All Types</option>
+            <option value="paid" {% if stipend_type == 'paid' %}selected{% endif %}>Paid Only</option>
+            <option value="unpaid" {% if stipend_type == 'unpaid' %}selected{% endif %}>Unpaid / Academic</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:0.825rem;">Sort By</label>
+          <select name="sort_by" class="form-select" style="padding:0.55rem 0.75rem; font-size:0.875rem;">
+            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+            {% if current_user and current_user.role == 'student' %}
+              <option value="recommended" {% if sort_by == 'recommended' %}selected{% endif %}>Best Match First</option>
+            {% endif %}
+            <option value="deadline" {% if sort_by == 'deadline' %}selected{% endif %}>Application Deadline</option>
+            <option value="stipend" {% if sort_by == 'stipend' %}selected{% endif %}>Highest Stipend</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:0.5rem;">
+          <button type="submit" class="btn btn-secondary btn-sm" style="flex:1;">
+            Apply Filters
+          </button>
+          <a href="{{ url_for('internships') }}" class="btn btn-outline btn-sm" id="clear-filters-btn" title="Reset all search & filters">
+            Clear
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Count Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+    <p style="color:var(--text-muted); font-size:0.95rem; font-weight:600;">
+      Showing <strong style="color:var(--text-main);">{{ internships|length }}</strong> of <strong style="color:var(--text-main);">{{ total_count }}</strong> matching opportunities
+      {% if q or category or work_mode or stipend_type %}
+        <span class="tag-badge tag-badge-purple" style="margin-left:0.5rem;">Filtered Results</span>
+      {% endif %}
+    </p>
+
+    {% if current_user and current_user.role == 'student' and not q and not category %}
+      <span style="font-size:0.85rem; color:var(--text-muted);">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i> Match scores calculated using your profile skills
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- Listings Grid -->
+  {% if internships %}
+    <div class="internships-grid">
+      {% for item in internships %}
+        <div class="card" id="listing-card-{{ item.id }}">
+          <div class="card-header-flex">
+            <div style="display:flex; gap:0.85rem; align-items:center;">
+              {% if item.logo_url %}
+                <img src="{{ item.logo_url }}" alt="{{ item.company }} logo" class="company-logo" loading="lazy">
+              {% else %}
+                <div class="company-placeholder">{{ item.company[:1] }}</div>
+              {% endif %}
+              <div>
+                <h3 style="font-size:1.15rem; font-weight:700; line-height:1.3;">
+                  <a href="{{ url_for('internship_detail', internship_id=item.id) }}" style="color:var(--text-main);">
+                    {{ item.title }}
+                  </a>
+                </h3>
+                <p style="color:var(--text-muted); font-size:0.875rem; font-weight:600;">{{ item.company }}</p>
+              </div>
+            </div>
+
+            {% if item.match_score is defined %}
+              <div class="match-score-pill {% if item.match_score < 40 %}score-low{% elif item.match_score < 70 %}score-med{% endif %}" title="{{ item.match_details.explanation if item.match_details else '' }}">
+                <i class="fa-solid fa-chart-pie"></i> {{ item.match_score }}% Match
+              </div>
+            {% endif %}
+          </div>
+
+          <p style="color:var(--text-muted); font-size:0.925rem; line-height:1.55; margin-bottom:1.25rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+            {{ item.description }}
+          </p>
+
+          <!-- Tags -->
+          <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.25rem;">
+            <span class="tag-badge tag-badge-purple">{{ item.category }}</span>
+            <span class="tag-badge tag-badge-blue"><i class="fa-solid fa-location-dot"></i> {{ item.location }} ({{ item.work_mode }})</span>
+            <span class="tag-badge tag-badge-green">{{ item.stipend }}</span>
+            {% if item.application_deadline %}
+              <span class="tag-badge"><i class="fa-regular fa-calendar"></i> Deadline: {{ item.application_deadline }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Skills -->
+          <div style="margin-bottom:1.25rem; font-size:0.825rem; color:var(--text-muted);">
+            <strong style="color:var(--text-main);">Required Skills:</strong> {{ item.required_skills }}
+          </div>
+
+          <!-- Application status tag if already recorded -->
+          {% if user_app_map.get(item.id) %}
+            <div style="margin-bottom:1rem;">
+              <span class="tag-badge tag-badge-coral">
+                <i class="fa-solid fa-paper-plane"></i> Tracked: {{ user_app_map.get(item.id) }}
+              </span>
+            </div>
+          {% endif %}
+
+          <!-- Footer Actions -->
+          <div style="margin-top:auto; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border-light); padding-top:1rem;">
+            <a href="{{ url_for('internship_detail', internship_id=item.id) }}" class="btn btn-outline btn-sm">
+              View Details <i class="fa-solid fa-arrow-right"></i>
+            </a>
+
+            {% if current_user and current_user.role == 'student' %}
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <!-- Bookmark button -->
+                <form action="{{ url_for('toggle_save_internship', internship_id=item.id) }}" method="POST" class="ajax-save-form" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-secondary btn-sm save-btn {% if item.id in user_saved_ids %}text-primary{% endif %}" title="Toggle bookmark">
+                    <i class="fa-{% if item.id in user_saved_ids %}solid{% else %}regular{% endif %} fa-bookmark"></i>
+                  </button>
+                </form>
+
+                <!-- Quick Apply / Track modal trigger -->
+                <button 
+                  type="button" 
+                  class="btn btn-primary btn-sm open-apply-modal-btn" 
+                  data-id="{{ item.id }}" 
+                  data-title="{{ item.title }}" 
+                  data-company="{{ item.company }}"
+                >
+                  Apply / Track
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5rem; margin-top:2.5rem;">
+        {% if page > 1 %}
+          <a href="{{ url_for('internships', page=page-1, q=q, category=category, work_mode=work_mode, stipend_type=stipend_type, sort_by=sort_by) }}" class="btn btn-secondary btn-sm">
+            &laquo; Previous
+          </a>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+          <a href="{{ url_for('internships', page=p, q=q, category=category, work_mode=work_mode, stipend_type=stipend_type, sort_by=sort_by) }}" class="btn btn-sm {% if p == page %}btn-primary{% else %}btn-secondary{% endif %}">
+            {{ p }}
+          </a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <a href="{{ url_for('internships', page=page+1, q=q, category=category, work_mode=work_mode, stipend_type=stipend_type, sort_by=sort_by) }}" class="btn btn-secondary btn-sm">
+            Next &raquo;
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="card" style="text-align:center; padding:4rem 2rem;">
+      <div style="width:72px; height:72px; border-radius:var(--radius-full); background:rgba(99, 102, 241, 0.1); color:var(--primary); font-size:2rem; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <h2 style="font-size:1.5rem; font-weight:700; color:var(--text-main); margin-bottom:0.5rem;">No Internships Match Your Query</h2>
+      <p style="color:var(--text-muted); max-width:480px; margin:0 auto 1.5rem; font-size:0.95rem;">
+        We couldn't find any listings matching your active filters. Try broadening your keywords or resetting your search parameters.
+      </p>
+      <a href="{{ url_for('internships') }}" class="btn btn-primary">
+        Reset All Filters
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: Quick Apply / Track Intention -->
+<div class="modal-overlay" id="applyModal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Track Application</h3>
+      <button type="button" class="alert-close" onclick="closeModal('applyModal');">&times;</button>
+    </div>
+
+    <form action="{{ url_for('applications') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="internship_id" id="modal-internship-id" value="">
+
+      <div style="margin-bottom:1.25rem;">
+        <h4 id="modal-internship-title" style="font-size:1.15rem; font-weight:700; color:var(--text-main);"></h4>
+        <p id="modal-internship-company" style="font-size:0.9rem; color:var(--text-muted); font-weight:600;"></p>
+      </div>
+
+      <div class="form-group">
+        <label for="modal-status" class="form-label">Application Status</label>
+        <select id="modal-status" name="status" class="form-select">
+          <option value="Interested">Interested (Planning to Apply)</option>
+          <option value="Applied">Applied (Submitted Externally)</option>
+          <option value="Interview">Interview Scheduled / In Progress</option>
+          <option value="Offered">Offer Received</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Withdrawn">Withdrawn</option>
+        </select>
+        <div class="form-hint">Confirm application only after submitting externally to the employer portal.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="modal-notes" class="form-label">Private Notes (Optional)</label>
+        <textarea id="modal-notes" name="notes" class="form-control" placeholder="Interview dates, recruiter contacts, or referral details..." rows="3"></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('applyModal');">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save to Tracker</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/internships.js') }}"></script>
+{% endblock %}

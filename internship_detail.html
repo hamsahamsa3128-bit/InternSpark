@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}{{ internship.title }} at {{ internship.company }} - InternSpark{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 5rem;">
+  <!-- Breadcrumb -->
+  <div style="margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-muted); display:flex; align-items:center; gap:0.5rem;">
+    <a href="{{ url_for('internships') }}"><i class="fa-solid fa-arrow-left"></i> Back to Internships</a>
+    <span>/</span>
+    <span>{{ internship.category }}</span>
+    <span>/</span>
+    <span style="color:var(--text-main); font-weight:600;">{{ internship.title }}</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:start;">
+    <!-- Main Detail Column -->
+    <div>
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-header-flex" style="margin-bottom:1.5rem;">
+          <div style="display:flex; gap:1.25rem; align-items:center;">
+            {% if internship.logo_url %}
+              <img src="{{ internship.logo_url }}" alt="{{ internship.company }} logo" class="company-logo" style="width:64px; height:64px;" loading="lazy">
+            {% else %}
+              <div class="company-placeholder" style="width:64px; height:64px; font-size:1.5rem;">{{ internship.company[:1] }}</div>
+            {% endif %}
+            <div>
+              <h1 style="font-size:1.75rem; font-weight:800; color:var(--text-main); line-height:1.25; margin-bottom:0.25rem;">
+                {{ internship.title }}
+              </h1>
+              <p style="font-size:1.1rem; color:var(--text-muted); font-weight:600;">
+                {{ internship.company }} • <span style="font-weight:500;">{{ internship.location }}</span>
+              </p>
+            </div>
+          </div>
+          {% if match_details %}
+            <div class="match-score-pill {% if match_details.score < 40 %}score-low{% elif match_details.score < 70 %}score-med{% endif %}" style="font-size:0.95rem; padding:0.45rem 1rem;">
+              <i class="fa-solid fa-bolt"></i> {{ match_details.score }}% Match
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Overview Badges -->
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:2rem;">
+          <span class="tag-badge tag-badge-purple" style="font-size:0.85rem;"><i class="fa-solid fa-layer-group"></i> {{ internship.category }}</span>
+          <span class="tag-badge tag-badge-blue" style="font-size:0.85rem;"><i class="fa-solid fa-laptop"></i> {{ internship.work_mode }}</span>
+          <span class="tag-badge tag-badge-green" style="font-size:0.85rem;"><i class="fa-solid fa-money-bill-wave"></i> {{ internship.stipend }}</span>
+          <span class="tag-badge" style="font-size:0.85rem;"><i class="fa-regular fa-clock"></i> {{ internship.duration }}</span>
+          {% if internship.application_deadline %}
+            <span class="tag-badge tag-badge-coral" style="font-size:0.85rem;"><i class="fa-regular fa-calendar-xmark"></i> Deadline: {{ internship.application_deadline }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Recommendation Match Breakdown Card (If logged in student) -->
+        {% if match_details %}
+          <div style="background:var(--grad-hero); border:1px solid rgba(99, 102, 241, 0.2); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:2rem;">
+            <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i> Match Engine Analysis
+            </h3>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
+              {{ match_details.explanation }}
+            </p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div style="background:#ffffff; border-radius:var(--radius-md); padding:0.85rem 1rem; border:1px solid var(--border-light);">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Skill Match (70% Weight)</div>
+                <div style="font-size:1.35rem; font-weight:800; color:var(--primary); margin-top:2px;">{{ match_details.skill_score }}%</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+                  Matched: {{ match_details.matched_skills|join(', ') if match_details.matched_skills else 'None' }}
+                </div>
+              </div>
+
+              <div style="background:#ffffff; border-radius:var(--radius-md); padding:0.85rem 1rem; border:1px solid var(--border-light);">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Interest Match (30% Weight)</div>
+                <div style="font-size:1.35rem; font-weight:800; color:var(--accent-coral); margin-top:2px;">{{ match_details.interest_score }}%</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+                  Category: {{ internship.category }}
+                </div>
+              </div>
+            </div>
+
+            {% if match_details.missing_skills %}
+              <div style="font-size:0.825rem; color:var(--text-muted);">
+                <strong style="color:var(--text-main);">Suggested Skills to Learn:</strong> {{ match_details.missing_skills|join(', ') }}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <!-- Role Description -->
+        <div style="margin-bottom:2rem;">
+          <h2 style="font-size:1.35rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">
+            About the Role
+          </h2>
+          <div style="color:var(--text-main); font-size:1rem; line-height:1.7; white-space:pre-line;">
+            {{ internship.description }}
+          </div>
+        </div>
+
+        <!-- Required Skills -->
+        <div style="margin-bottom:2rem;">
+          <h2 style="font-size:1.35rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">
+            Key Skills Required
+          </h2>
+          <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            {% for skill in internship.required_skills.split(',') %}
+              <span class="tag-badge tag-badge-purple" style="font-size:0.875rem; padding:0.4rem 0.85rem;">
+                <i class="fa-solid fa-check"></i> {{ skill.strip() }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Eligibility Criteria -->
+        {% if internship.eligibility %}
+          <div style="margin-bottom:2rem;">
+            <h2 style="font-size:1.35rem; font-weight:700; color:var(--text-main); margin-bottom:0.75rem;">
+              Candidate Eligibility
+            </h2>
+            <p style="color:var(--text-main); font-size:0.95rem; line-height:1.6;">
+              {{ internship.eligibility }}
+            </p>
+          </div>
+        {% endif %}
+
+        <div style="font-size:0.85rem; color:var(--text-muted); border-top:1px solid var(--border-light); padding-top:1rem;">
+          <i class="fa-solid fa-clock"></i> Posted on: {{ internship.posted_date[:10] }}
+        </div>
+      </div>
+
+      <!-- Similar Opportunities -->
+      {% if similar %}
+        <div style="margin-top:3rem;">
+          <h3 style="font-size:1.35rem; font-weight:700; margin-bottom:1.25rem;">Similar {{ internship.category }} Internships</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">
+            {% for s in similar %}
+              <div class="card" style="padding:1.25rem;">
+                <h4 style="font-size:1rem; font-weight:700; margin-bottom:0.25rem;">
+                  <a href="{{ url_for('internship_detail', internship_id=s.id) }}">{{ s.title }}</a>
+                </h4>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.75rem;">{{ s.company }} • {{ s.location }}</p>
+                <div style="margin-top:auto;">
+                  <a href="{{ url_for('internship_detail', internship_id=s.id) }}" class="btn btn-outline btn-sm" style="width:100%;">View Role</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar: Actions & Tracker -->
+    <div>
+      <div class="card" style="position:sticky; top:90px; box-shadow:var(--shadow-md);">
+        <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.75rem;">
+          Apply & Track
+        </h3>
+
+        <!-- External Link Notice -->
+        {% if internship.application_url %}
+          <div style="margin-bottom:1.25rem;">
+            <a href="{{ internship.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg" style="width:100%;" id="external-apply-btn">
+              Apply on Employer Site <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+            <small style="display:block; color:var(--text-muted); font-size:0.8rem; margin-top:0.4rem; text-align:center;">
+              Opens employer's verified portal in a new tab.
+            </small>
+          </div>
+        {% endif %}
+
+        {% if current_user and current_user.role == 'student' %}
+          <!-- Application Tracker Form -->
+          <form action="{{ url_for('applications') }}" method="POST" style="margin-bottom:1.25rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="internship_id" value="{{ internship.id }}">
+
+            <div class="form-group">
+              <label for="detail-status" class="form-label" style="font-size:0.875rem;">Track Your Application Status</label>
+              <select id="detail-status" name="status" class="form-select">
+                <option value="Interested" {% if existing_app and existing_app.status == 'Interested' %}selected{% endif %}>Interested (Planning to Apply)</option>
+                <option value="Applied" {% if existing_app and existing_app.status == 'Applied' %}selected{% endif %}>Applied (Submitted Externally)</option>
+                <option value="Interview" {% if existing_app and existing_app.status == 'Interview' %}selected{% endif %}>Interview</option>
+                <option value="Offered" {% if existing_app and existing_app.status == 'Offered' %}selected{% endif %}>Offered</option>
+                <option value="Rejected" {% if existing_app and existing_app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="Withdrawn" {% if existing_app and existing_app.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="detail-notes" class="form-label" style="font-size:0.875rem;">Private Notes</label>
+              <textarea id="detail-notes" name="notes" class="form-control" placeholder="Interview dates, questions asked, referrals..." rows="3">{{ existing_app.notes if existing_app else '' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-secondary" style="width:100%;">
+              <i class="fa-solid fa-list-check"></i> {% if existing_app %}Update Status{% else %}Record in Tracker{% endif %}
+            </button>
+          </form>
+
+          <!-- Bookmark Button -->
+          <form action="{{ url_for('toggle_save_internship', internship_id=internship.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline" style="width:100%;">
+              <i class="fa-{% if is_saved %}solid{% else %}regular{% endif %} fa-bookmark"></i>
+              {% if is_saved %}Remove from Saved{% else %}Save for Later{% endif %}
+            </button>
+          </form>
+
+        {% elif not current_user %}
+          <div style="background:var(--bg-card-subtle); padding:1rem; border-radius:var(--radius-md); text-align:center;">
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:0.75rem;">Log in to calculate your custom match score, save this role, and track your application status.</p>
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm" style="width:100%;">Log In / Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

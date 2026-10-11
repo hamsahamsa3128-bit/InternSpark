@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - InternSpark{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; padding: 2.5rem 1.5rem 5rem;">
+  <div style="margin-bottom: 2rem;">
+    <div class="hero-pill" style="margin-bottom:0.5rem;">
+      <i class="fa-solid fa-id-card"></i> Student Profile
+    </div>
+    <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+      Your Student Profile
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Keep your technical skills and preferences up to date for precise rule-based recommendations.
+    </p>
+  </div>
+
+  <!-- Profile Strength Bar -->
+  <div class="card" style="margin-bottom: 2rem; background: #ffffff; border-color: rgba(99, 102, 241, 0.2);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+      <span style="font-weight:700; color:var(--text-main);">Profile Completeness</span>
+      <span style="font-weight:800; color:var(--primary);">{{ completion_pct }}%</span>
+    </div>
+    <div style="height:10px; background:var(--bg-card-subtle); border-radius:var(--radius-full); overflow:hidden;">
+      <div style="width: {{ completion_pct }}%; height:100%; background:var(--grad-primary);"></div>
+    </div>
+  </div>
+
+  <div class="card" style="box-shadow: var(--shadow-md);">
+    <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data" id="profile-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <!-- Section: Basic Information -->
+      <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-user" style="color:var(--primary);"></i> Basic Information
+      </h3>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="name" class="form-label">Full Name <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="email" class="form-label">Email Address (Read-only)</label>
+          <input type="email" id="email" class="form-control" value="{{ user.email }}" disabled style="background:#f1f5f9; cursor:not-allowed;">
+        </div>
+      </div>
+
+      <!-- Section: Academic Details -->
+      <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-graduation-cap" style="color:var(--secondary);"></i> Academic Details
+      </h3>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="college" class="form-label">College / University</label>
+          <input type="text" id="college" name="college" class="form-control" placeholder="e.g. Stanford University, IIT, etc." value="{{ profile.college|default('') }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="degree" class="form-label">Degree & Branch</label>
+          <input type="text" id="degree" name="degree" class="form-control" placeholder="e.g. B.S. in Computer Science" value="{{ profile.degree|default('') }}">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="semester" class="form-label">Current Semester / Year</label>
+          <input type="text" id="semester" name="semester" class="form-control" placeholder="e.g. 6th Semester / 3rd Year" value="{{ profile.semester|default('') }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="graduation_year" class="form-label">Graduation Year</label>
+          <input type="number" id="graduation_year" name="graduation_year" class="form-control" placeholder="2027" value="{{ profile.graduation_year|default('') }}" min="2020" max="2035">
+        </div>
+      </div>
+
+      <!-- Section: Technical Skills & Career Interests -->
+      <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-code" style="color:var(--accent-coral);"></i> Skills & Preferences
+      </h3>
+
+      <div class="form-group">
+        <label for="skills" class="form-label">
+          Technical Skills (Comma Separated) <span style="color:#ef4444;">*</span>
+        </label>
+        <textarea 
+          id="skills" 
+          name="skills" 
+          class="form-control" 
+          placeholder="e.g. Python, Flask, React, JavaScript, SQL, Git, Docker, Machine Learning"
+          rows="3"
+        >{{ profile.skills|default('') }}</textarea>
+        <div class="form-hint">
+          <strong>Tip:</strong> 70% of recommendation scores are calculated from these skills matching internship requirements.
+        </div>
+
+        <!-- Quick Skill Suggestion Chips -->
+        <div style="margin-top:0.65rem; display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;">
+          <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Click to add:</span>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="Python">+ Python</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="Flask">+ Flask</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="React">+ React</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="JavaScript">+ JavaScript</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="SQL">+ SQL</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="Machine Learning">+ Machine Learning</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="Docker">+ Docker</button>
+          <button type="button" class="tag-badge skill-suggestion-chip" data-skill="Git">+ Git</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="interests" class="form-label">Career Interests / Desired Fields</label>
+        <input 
+          type="text" 
+          id="interests" 
+          name="interests" 
+          class="form-control" 
+          placeholder="e.g. AI/ML, Web Development, Cloud Computing, Cybersecurity" 
+          value="{{ profile.interests|default('') }}"
+        >
+        <div class="form-hint">30% of recommendation scores match your interests with internship categories.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="work_mode" class="form-label">Preferred Work Mode</label>
+          <select id="work_mode" name="work_mode" class="form-select">
+            <option value="Remote" {% if profile.work_mode == 'Remote' %}selected{% endif %}>Remote</option>
+            <option value="Hybrid" {% if profile.work_mode == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+            <option value="On-site" {% if profile.work_mode == 'On-site' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="preferred_location" class="form-label">Preferred Location</label>
+          <input type="text" id="preferred_location" name="preferred_location" class="form-control" placeholder="e.g. San Francisco, New York, or Remote" value="{{ profile.preferred_location|default('') }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="duration_preference" class="form-label">Internship Duration Preference</label>
+        <input type="text" id="duration_preference" name="duration_preference" class="form-control" placeholder="e.g. 3 Months, Summer 2026, 6 Months" value="{{ profile.duration_preference|default('') }}">
+      </div>
+
+      <div class="form-group">
+        <label for="bio" class="form-label">Short Bio / Summary</label>
+        <textarea id="bio" name="bio" class="form-control" placeholder="Briefly describe your background, career aspirations, and project accomplishments..." rows="3">{{ profile.bio|default('') }}</textarea>
+      </div>
+
+      <!-- Section: Resume Upload -->
+      <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-file-pdf" style="color:var(--accent-pink);"></i> Resume & Documents
+      </h3>
+
+      <div class="form-group">
+        <label class="form-label">Upload Resume (PDF or DOCX, Max 5MB)</label>
+        <div style="border: 2px dashed var(--border-light); border-radius: var(--radius-md); padding: 1.75rem; text-align: center; background: var(--bg-card-subtle);">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
+          <p style="font-weight:600; color:var(--text-main); margin-bottom:0.35rem;">Choose a file from your device</p>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Safe storage: only you can access and download your uploaded resume.</p>
+          <input type="file" id="resume-upload" name="resume" accept=".pdf,.docx" style="display:none;">
+          <label for="resume-upload" class="btn btn-secondary btn-sm" style="cursor:pointer;">
+            <i class="fa-solid fa-folder-open"></i> Browse Files
+          </label>
+          <div id="file-chosen-notice" style="margin-top:0.75rem; font-size:0.875rem; font-weight:600; color:var(--primary);"></div>
+        </div>
+
+        {% if profile.resume_filename %}
+          <div style="margin-top:1rem; display:flex; align-items:center; justify-content:space-between; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-md); padding:0.85rem 1.25rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <i class="fa-solid fa-file-circle-check" style="color:#059669; font-size:1.35rem;"></i>
+              <div>
+                <strong style="color:#065f46; font-size:0.95rem;">Current Resume on File:</strong>
+                <div style="font-size:0.85rem; color:#047857;">{{ profile.resume_original_name or 'Resume.pdf' }}</div>
+              </div>
+            </div>
+            <a href="{{ url_for('download_resume') }}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">
+              <i class="fa-solid fa-download"></i> Download My Resume
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div style="margin-top:2.5rem; display:flex; justify-content:flex-end; gap:1rem;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg" id="save-profile-btn">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

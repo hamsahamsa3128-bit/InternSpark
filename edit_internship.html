@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Internship #{{ internship.id }} - InternSpark Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 860px; padding: 2.5rem 1.5rem 5rem;">
+  <div style="margin-bottom: 2rem;">
+    <div class="hero-pill" style="margin-bottom:0.5rem; background:rgba(236, 72, 153, 0.1); color:var(--accent-pink); border-color:rgba(236, 72, 153, 0.2);">
+      <i class="fa-solid fa-pen-to-square"></i> Modify Listing
+    </div>
+    <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
+      Edit Internship: {{ internship.title }}
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Update details, change active visibility status, or adjust required skills.
+    </p>
+  </div>
+
+  <div class="card" style="box-shadow: var(--shadow-md);">
+    <form action="{{ url_for('edit_internship', internship_id=internship.id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="title" class="form-label">Internship Title <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="title" name="title" class="form-control" required value="{{ internship.title }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="company" class="form-label">Company / Organization <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="company" name="company" class="form-control" required value="{{ internship.company }}">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="category" class="form-label">Category <span style="color:#ef4444;">*</span></label>
+          <select id="category" name="category" class="form-select" required>
+            {% for cat in ['AI/ML', 'Data Science', 'Python', 'Web Development', 'Software Engineering', 'Cybersecurity', 'Cloud Computing'] %}
+              <option value="{{ cat }}" {% if internship.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="location" class="form-label">Location <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="location" name="location" class="form-control" required value="{{ internship.location }}">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1.25rem; margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="work_mode" class="form-label">Work Mode <span style="color:#ef4444;">*</span></label>
+          <select id="work_mode" name="work_mode" class="form-select" required>
+            <option value="Remote" {% if internship.work_mode == 'Remote' %}selected{% endif %}>Remote</option>
+            <option value="Hybrid" {% if internship.work_mode == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+            <option value="On-site" {% if internship.work_mode == 'On-site' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="duration" class="form-label">Duration <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="duration" name="duration" class="form-control" required value="{{ internship.duration }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="stipend" class="form-label">Stipend Amount <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="stipend" name="stipend" class="form-control" required value="{{ internship.stipend }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="is_paid" class="form-label">Compensation Type</label>
+          <select id="is_paid" name="is_paid" class="form-select">
+            <option value="1" {% if internship.is_paid == 1 %}selected{% endif %}>Paid Internship</option>
+            <option value="0" {% if internship.is_paid == 0 %}selected{% endif %}>Unpaid / Academic Credit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="required_skills" class="form-label">
+          Required Skills (Comma-separated) <span style="color:#ef4444;">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="required_skills" 
+          name="required_skills" 
+          class="form-control" 
+          required 
+          value="{{ internship.required_skills }}"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">Job Description & Responsibilities <span style="color:#ef4444;">*</span></label>
+        <textarea id="description" name="description" class="form-control" rows="5" required>{{ internship.description }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="eligibility" class="form-label">Eligibility Requirements</label>
+        <input type="text" id="eligibility" name="eligibility" class="form-control" value="{{ internship.eligibility|default('') }}">
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="application_deadline" class="form-label">Application Deadline</label>
+          <input type="date" id="application_deadline" name="application_deadline" class="form-control" value="{{ internship.application_deadline|default('') }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="application_url" class="form-label">External Application Link</label>
+          <input type="url" id="application_url" name="application_url" class="form-control" value="{{ internship.application_url|default('') }}">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:1.25rem; margin-bottom:1.5rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="logo_url" class="form-label">Company Logo URL (Optional)</label>
+          <input type="url" id="logo_url" name="logo_url" class="form-control" value="{{ internship.logo_url|default('') }}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="is_active" class="form-label">Visibility Status</label>
+          <select id="is_active" name="is_active" class="form-select">
+            <option value="1" {% if internship.is_active == 1 %}selected{% endif %}>Active (Visible to Students)</option>
+            <option value="0" {% if internship.is_active == 0 %}selected{% endif %}>Inactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-floppy-disk"></i> Update Internship
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
